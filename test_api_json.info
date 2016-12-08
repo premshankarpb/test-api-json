@@ -1,0 +1,6 @@
+name = Test API json
+package = API
+core = 7.x
+
+description = The test module to check the node content with the api key supplied
+configure = admin/config/system/site-information

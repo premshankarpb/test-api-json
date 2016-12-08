@@ -1,0 +1,83 @@
+<?php
+
+/**
+ * @file
+ * Test API json module.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function test_api_json_menu() {
+  $items = array();
+  $items['page_json/%/%'] = array(
+    'type' => MENU_CALLBACK,
+    'page callback' => 'test_api_json_node_callback',
+    'page arguments' => array(2),
+    'access callback' => 'test_api_json_access_callback',
+    'access arguments' => array(1, 2),    
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function test_api_json_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id == 'system_site_information_settings') {
+    $site_api_key = variable_get('siteapikey', t('No API Key yet'));
+    $form['site_information']['siteapikey'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Site API Key'),
+      '#default_value' => $site_api_key,
+    );
+    if ($site_api_key == 'No API Key yet') {
+      $form['actions']['submit']['#value'] = t('Save Configuration');
+    }
+    else {
+      $form['actions']['submit']['#value'] = t('Update Configuration');
+    }
+  }
+}
+
+/**
+ * Access callback for page_json/%/%.
+ * Checking if API Key and the node are present.
+ *
+ * @param string $api_key
+ *   API key passed by the URL.
+ * @param nodeid $nid
+ *
+ * @return bool
+ *    TRUE if got access, else FALSE.
+ */
+function test_api_json_access_callback($api_key, $nid) {
+  $site_api_key = variable_get('siteapikey', '');
+  if($node = node_load($nid)) {
+    if (($node->type == 'page') && ($site_api_key == $api_key) && ($site_api_key != '')) {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+/**
+ * Callback function for page_json/%/%.
+ * 
+ * @param node id $node
+ *
+ * @return string
+ *   JSON representation of Node.
+ */
+function test_api_json_node_callback($nid) {
+  if($node = node_load($nid)) {
+    return drupal_json_output($node);
+  }
+}
+
+/**
+ * Implements hook_disable().
+ */
+function test_api_json_disable() {
+  variable_del('siteapikey');
+}
